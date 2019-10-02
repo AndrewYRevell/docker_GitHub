@@ -87,7 +87,8 @@ ENV ITKSNAPPATH="/opt/itksnap" \
     PATH="/opt/itksnap:$PATH"
 RUN echo "Downloading ITK-SNAP ..." \
     && mkdir -p /opt/itksnap \
-    && wget -P /opt/itksnap/ http://www.nitrc.org/frs/downloadlink.php/11442
+    && wget -P /opt/itksnap/ https://sourceforge.net/projects/itk-snap/files/itk-snap/Nightly/itksnap-nightly-master-Linux-gcc64.tar.gz
+    && tar -xvzf /opt/itksnap/itksnap-nightly-master-Linux-gcc64.tar.gz -C /opt/itksnap --strip-components 1
 
 ENV FREESURFERPATH="/opt/freesurfer" \
     PATH="/opt/freesurfer/bin:$PATH"
