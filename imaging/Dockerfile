@@ -25,8 +25,8 @@ RUN export ND_ENTRYPOINT="/startup/startup.sh" \
 	   qt5-default \
 	   zlib1g \
 	   libqt5opengl5 \
-	   libglu1-mesa free\
-	   glut3 \
+	   libglu1-mesa \ 
+	   freeglut3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /startup \
@@ -87,7 +87,7 @@ ENV ITKSNAPPATH="/opt/itksnap" \
     PATH="/opt/itksnap:$PATH"
 RUN echo "Downloading ITK-SNAP ..." \
     && mkdir -p /opt/itksnap \
-    && wget -P /opt/itksnap/ https://sourceforge.net/projects/itk-snap/files/itk-snap/Nightly/itksnap-nightly-master-Linux-gcc64.tar.gz
+    && wget -P /opt/itksnap/ https://sourceforge.net/projects/itk-snap/files/itk-snap/Nightly/itksnap-nightly-master-Linux-gcc64.tar.gz \
     && tar -xvzf /opt/itksnap/itksnap-nightly-master-Linux-gcc64.tar.gz -C /opt/itksnap --strip-components 1
 
 ENV FREESURFERPATH="/opt/freesurfer" \
