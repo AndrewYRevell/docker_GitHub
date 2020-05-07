@@ -1,5 +1,0 @@
-deprecation
-requests
-numpy
-pandas
-pennprov==2.2.4
