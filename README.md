@@ -13,10 +13,10 @@ Dockerfiles to create Docker images used by the CNT at the university of Pennsyl
     Echobase code is from https://github.com/andyrevell/paper001
     
     Ubuntu 18.04
-      Python 2.7 and Python 3.6
-      Numpy 1.18.4
-      pandas 1.0.3
-       scipy 1.4.1
+    Python 2.7 and Python 3.6
+    Numpy 1.18.4
+    pandas 1.0.3
+    scipy 1.4.1
        
  ### **Imaging**: 
   Dockerfiles used to create images with common MRI analysis tools.
