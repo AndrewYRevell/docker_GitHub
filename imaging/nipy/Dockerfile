@@ -7,7 +7,7 @@
 # 
 #     https://github.com/kaczmarj/neurodocker
 
-FROM debian:stretch
+FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
@@ -39,6 +39,17 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
 
 ENTRYPOINT ["/neurodocker/startup.sh"]
+
+
+RUN pip3 install nibabel
+RUN pip3 install dipy
+RUN pip3 install fury
+RUN pip3 install nipy
+RUN pip3 install nilearn
+RUN pip3 install numpy==1.18.4
+RUN pip3 install pandas==1.0.3
+RUN pip3 install scipy==1.4.1
+RUN pip3 install seaborn
 
 ENV PATH="/opt/afni-latest:$PATH" \
     AFNI_PLUGINPATH="/opt/afni-latest"
