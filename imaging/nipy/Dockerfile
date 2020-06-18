@@ -22,7 +22,14 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            ca-certificates \
            curl \
            locales \
+           python3-pip \
+	       python-pip \
            unzip \
+           wget \
+           gcc \
+           unzip \
+           git \
+           gfortran \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -39,17 +46,6 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
     && chmod -R 777 /neurodocker && chmod a+s /neurodocker
 
 ENTRYPOINT ["/neurodocker/startup.sh"]
-
-
-RUN pip3 install nibabel
-RUN pip3 install dipy
-RUN pip3 install fury
-RUN pip3 install nipy
-RUN pip3 install nilearn
-RUN pip3 install numpy==1.18.4
-RUN pip3 install pandas==1.0.3
-RUN pip3 install scipy==1.4.1
-RUN pip3 install seaborn
 
 ENV PATH="/opt/afni-latest:$PATH" \
     AFNI_PLUGINPATH="/opt/afni-latest"
@@ -105,6 +101,13 @@ RUN echo "Downloading Convert3D ..." \
     && mkdir -p /opt/convert3d-1.0.0 \
     && curl -fsSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
     | tar -xz -C /opt/convert3d-1.0.0 --strip-components 1
+
+ENV DSISTUDIOPATH="/opt/dsistudio" \
+    PATH="/opt/dsistudio:$PATH"
+RUN echo "Downloading DSI studio ..." \
+    && mkdir -p /opt/dsistudio \
+    && wget -P /opt/dsistudio/ http://www.lin4neuro.net/lin4neuro/neuroimaging_software_packages/dsistudio1804.zip \
+    && unzip /opt/dsistudio/dsistudio1804.zip -d /opt/
 
 ENV PATH="/opt/dcm2niix-master/bin:$PATH"
 RUN apt-get update -qq \
@@ -164,6 +167,7 @@ RUN apt-get update -qq \
            libxrender1 \
            libxt6 \
            wget \
+           emacs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FSL ..." \
@@ -234,41 +238,68 @@ RUN echo "Downloading PETPVC ..." \
     && curl -fsSL --retry 5 https://github.com/UCL/PETPVC/releases/download/v1.2.2/PETPVC-1.2.2-Linux.tar.gz \
     | tar -xz -C /opt/petpvc-1.2.2 --strip-components 1
 
-ENV FORCE_SPMMCR="1" \
-    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu:/opt/matlabmcr-2010a/v713/runtime/glnxa64:/opt/matlabmcr-2010a/v713/bin/glnxa64:/opt/matlabmcr-2010a/v713/sys/os/glnxa64:/opt/matlabmcr-2010a/v713/extern/bin/glnxa64" \
-    MATLABCMD="/opt/matlabmcr-2010a/v713/toolbox/matlab"
-RUN export TMPDIR="$(mktemp -d)" \
-    && apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           bc \
-           libncurses5 \
-           libxext6 \
-           libxmu6 \
-           libxpm-dev \
-           libxt6 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Downloading MATLAB Compiler Runtime ..." \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://mirrors.kernel.org/debian/pool/main/libx/libxp/libxp6_1.0.2-2_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
-    && apt-get install -f \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL --retry 5 -o "$TMPDIR/MCRInstaller.bin" https://dl.dropbox.com/s/zz6me0c3v4yq5fd/MCR_R2010a_glnxa64_installer.bin \
-    && chmod +x "$TMPDIR/MCRInstaller.bin" \
-    && "$TMPDIR/MCRInstaller.bin" -silent -P installLocation="/opt/matlabmcr-2010a" \
-    && rm -rf "$TMPDIR" \
-    && unset TMPDIR \
-    && echo "Downloading standalone SPM ..." \
-    && curl -fsSL --retry 5 -o /tmp/spm12.zip http://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/previous/spm12_r7219_R2010a.zip \
-    && unzip -q /tmp/spm12.zip -d /tmp \
-    && mkdir -p /opt/spm12-r7219 \
-    && mv /tmp/spm12/* /opt/spm12-r7219/ \
-    && chmod -R 777 /opt/spm12-r7219 \
-    && rm -rf /tmp/* \
-    && /opt/spm12-r7219/run_spm12.sh /opt/matlabmcr-2010a/v713 quit \
-    && sed -i '$iexport SPMMCRCMD=\"/opt/spm12-r7219/run_spm12.sh /opt/matlabmcr-2010a/v713 script\"' $ND_ENTRYPOINT
+ENV MATLAB_VERSION R2019b
+ENV MCR_VERSION v97
+RUN mkdir /opt/mcr_install \
+ && mkdir /opt/mcr \
+ && wget --progress=bar:force -P /opt/mcr_install https://ssd.mathworks.com/supportfiles/downloads/${MATLAB_VERSION}/Release/3/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_${MATLAB_VERSION}_Update_3_glnxa64.zip \
+ && unzip -q /opt/mcr_install/MATLAB_Runtime_${MATLAB_VERSION}_Update_3_glnxa64.zip -d /opt/mcr_install \
+ && /opt/mcr_install/install -destinationFolder /opt/mcr -agreeToLicense yes -mode silent \
+ && rm -rf /opt/mcr_install /tmp/*
+
+# Install SPM Standalone in /opt/spm12/
+ENV SPM_VERSION 12
+ENV SPM_REVISION r7771
+ENV LD_LIBRARY_PATH /opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/mcr/${MCR_VERSION}/extern/bin/glnxa64
+ENV MCR_INHIBIT_CTF_LOCK 1
+ENV SPM_HTML_BROWSER 0
+# Running SPM once with "function exit" tests the succesfull installation *and*
+# extracts the ctf archive which is necessary if singularity is going to be
+# used later on, because singularity containers are read-only.
+# Also, set +x on the entrypoint for non-root container invocations
+RUN wget --no-check-certificate --progress=bar:force -P /opt https://www.fil.ion.ucl.ac.uk/spm/download/restricted/bids/spm${SPM_VERSION}_${SPM_REVISION}_Linux_${MATLAB_VERSION}.zip \
+ && unzip -q /opt/spm${SPM_VERSION}_${SPM_REVISION}_Linux_${MATLAB_VERSION}.zip -d /opt \
+ && rm -f /opt/spm${SPM_VERSION}_${SPM_REVISION}_Linux_${MATLAB_VERSION}.zip \
+ && /opt/spm${SPM_VERSION}/spm${SPM_VERSION} function exit \
+ && chmod +x /opt/spm${SPM_VERSION}/spm${SPM_VERSION}
+
+ENV MRICron="/opt/mricron" \
+    PATH="/opt/mricron:$PATH"
+RUN echo "Downloading MRIcron  ..." \
+    && mkdir -p /opt/mricron \
+    && wget --no-check-certificate -P /opt/mricron/ https://github.com/neurolabusc/MRIcron/releases/download/v1.0.20190902/MRIcron_linux.zip \
+    && unzip /opt/mricron/MRIcron_linux.zip -d /opt/
+
+
+
+RUN pip3 install numpy==1.18.4
+RUN pip3 install pandas==1.0.3
+RUN pip3 install scipy==1.4.1
+RUN pip3 install nibabel
+RUN pip3 install dipy
+RUN pip3 install fury
+RUN pip3 install setuptools==46.1.3
+RUN pip3 install nipy
+RUN pip3 install nilearn
+RUN pip3 install seaborn
+RUN pip3 install matplotlib
+RUN pip3 install pandas
+
+RUN pip3 install requests==2.23.0
+RUN pip3 install deprecation==2.1.0
+RUN pip3 install mtspec==0.3.2
+
+RUN pip install setuptools
+RUN pip install pennprov==2.2.4
+
+WORKDIR /home/
+
+RUN git clone https://github.com/andyrevell/paper001.git
+
+WORKDIR /home/paper001/pipelines/ieegpy
+RUN python2.7 setup.py build
+RUN python3.6 setup.py install
+WORKDIR /home/paper001/pipelines/
 
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
