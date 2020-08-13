@@ -97,6 +97,7 @@ RUN pip3 install mtspec==0.3.2
 
 RUN pip install setuptools
 RUN pip install pennprov==2.2.4
+RUN pip3 install bctpy
 
 WORKDIR /home/
 

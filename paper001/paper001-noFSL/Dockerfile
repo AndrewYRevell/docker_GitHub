@@ -49,14 +49,14 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
 ENTRYPOINT ["/neurodocker/startup.sh"]
 
 
-ENV C3DPATH="/opt/convert3d-1.0.0" \
-    PATH="/opt/convert3d-1.0.0/bin:$PATH"
-RUN echo "Downloading Convert3D ..." \
-    && mkdir -p /opt/convert3d-1.0.0 \
-    && curl -fsSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
-    | tar -xz -C /opt/convert3d-1.0.0 --strip-components 1
+ENV ANTSPATH="/opt/ants-2.3.1" \
+    PATH="/opt/ants-2.3.1:$PATH"
+RUN echo "Downloading ANTs ..." \
+    && mkdir -p /opt/ants-2.3.1 \
+    && curl -fsSL --retry 5 https://dl.dropbox.com/s/1xfhydsf4t4qoxg/ants-Linux-centos6_x86_64-v2.3.1.tar.gz \
+    | tar -xz -C /opt/ants-2.3.1 --strip-components 1
 
-ENV PATH="/opt/dcm2niix-master/bin:$PATH"
+ENV PATH="/opt/dcm2niix-latest/bin:$PATH"
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
            cmake \
@@ -71,11 +71,26 @@ RUN apt-get update -qq \
     && git clone https://github.com/rordenlab/dcm2niix /tmp/dcm2niix \
     && mkdir /tmp/dcm2niix/build \
     && cd /tmp/dcm2niix/build \
-    && cmake  -DCMAKE_INSTALL_PREFIX:PATH=/opt/dcm2niix-master .. \
+    && cmake  -DCMAKE_INSTALL_PREFIX:PATH=/opt/dcm2niix-latest .. \
     && make \
     && make install \
     && rm -rf /tmp/dcm2niix
 
+ENV DSISTUDIOPATH="/opt/dsistudio" \
+    PATH="/opt/dsistudio:$PATH"
+RUN echo "Downloading DSI studio ..." \
+    && mkdir -p /opt/dsistudio \
+    && wget -P /opt/dsistudio/ http://www.lin4neuro.net/lin4neuro/neuroimaging_software_packages/dsistudio1804.zip \
+    && unzip /opt/dsistudio/dsistudio1804.zip -d /opt/
+
+
+
+ENV C3DPATH="/opt/convert3d-1.0.0" \
+    PATH="/opt/convert3d-1.0.0/bin:$PATH"
+RUN echo "Downloading Convert3D ..." \
+    && mkdir -p /opt/convert3d-1.0.0 \
+    && curl -fsSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
+    | tar -xz -C /opt/convert3d-1.0.0 --strip-components 1
 
 RUN pip3 install numpy==1.18.4
 RUN pip3 install pandas==1.0.3
@@ -89,23 +104,25 @@ RUN pip3 install nilearn
 RUN pip3 install seaborn
 RUN pip3 install matplotlib
 RUN pip3 install pandas
+RUN pip3 install scikit-learn
 RUN pip3 install pingouin
 
 RUN pip3 install requests==2.23.0
 RUN pip3 install deprecation==2.1.0
 RUN pip3 install mtspec==0.3.2
+RUN pip3 install xlrd
 
-RUN pip install setuptools
 RUN pip install pennprov==2.2.4
-
+RUN pip install setuptools
+RUN pip3 install bctpy
 WORKDIR /home/
 
-RUN git clone https://github.com/andyrevell/paper001.git
+RUN git clone https://github.com/andyrevell/echobase.git
 
-WORKDIR /home/paper001/pipelines/ieegpy
+WORKDIR /home/echobase/ieegpy
 RUN python2.7 setup.py build
 RUN python3.6 setup.py install
-WORKDIR /home/paper001/pipelines/
+WORKDIR /home/echobase/
 
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
