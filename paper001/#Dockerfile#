@@ -155,10 +155,19 @@ RUN python2.7 setup.py build
 RUN python3.6 setup.py install
 WORKDIR /mnt
 RUN mkdir -p /root/.local/share/jupyter/runtime
-RUN chmod -R 777 /root/.local/share/jupyter/runtime && chmod g+s /root/.local/share/jupyter/runtime
+
+RUN apt-get install -y -q --no-install-recommends \
+    libqt5gui5 \
+    libqt5widgets5 \
+    libqt5gui5 \
+    libqt5dbus5 \
+    libqt5network5 \
+    libqt5core5a
+    
+    
 
 
-RUN echo 'umask 002' >> "$ND_ENTRYPOINT"
+
 
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
