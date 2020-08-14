@@ -31,6 +31,13 @@ RUN export ND_ENTRYPOINT="/neurodocker/startup.sh" \
            git \
            gfortran \
            emacs \
+	   cmake-curses-gui \
+	   libglu1 \
+	   qt5-default \
+	   zlib1g \
+	   libqt5opengl5 \
+	   libglu1-mesa \ 
+	   freeglut3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -155,10 +162,7 @@ RUN python2.7 setup.py build
 RUN python3.6 setup.py install
 WORKDIR /mnt
 RUN mkdir -p /root/.local/share/jupyter/runtime
-RUN chmod -R 777 /root/.local/share/jupyter/runtime && chmod g+s /root/.local/share/jupyter/runtime
 
-
-RUN echo 'umask 002' >> "$ND_ENTRYPOINT"
 
 RUN echo '{ \
     \n  "pkg_manager": "apt", \
