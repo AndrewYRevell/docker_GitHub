@@ -1,4 +1,6 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
+
+ARG DEBIAN_FRONTEND="noninteractive"
 
 ENV LANG="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8" \
@@ -21,8 +23,57 @@ RUN export ND_ENTRYPOINT="/docker/startup.sh" \
            git \
            gfortran \
            emacs \
+	   cmake-curses-gui \
+	   libglu1 \
+	   qt5-default \
+	   zlib1g \
+	   libqt5opengl5 \
+	   libglu1-mesa \ 
+	   freeglut3 \
+	   libmuparser-dev \
+           libqalculate-dev \
+           libqt5svg5-dev \
+           libqt5x11extras5-dev \
+           qtbase5-dev \
+           qtdeclarative5-dev \
+    	   libfontconfig1 \
+	   libboost-dev \
+	   mesa-common-dev \
+    	   libgl1-mesa-dev \
+    	   libglu1-mesa-dev \
+    	   freeglut3-dev \
+    	   mesa-utils \
+	   zlib1g \
+  	   libqt5opengl5 \
+  	   libglu1-mesa \
+	   xvfb \
+	   build-essential \
+           autoconf \
+           libtool \
+           pkg-config \
+           libfontconfig1 \
+           libfreetype6 \
+           libgl1-mesa-dev \
+           libglu1-mesa-dev \
+           libgomp1 \
+           libice6 \
+           libxcursor1 \
+           libxft2 \
+           libxinerama1 \
+           libxrandr2 \
+	   libxrender1 \
+           libxt6 \
+           libboost-all-dev \
+           zlib1g-dev \
+           freeglut3-dev \
+           make \
+           zlib1g-dev \
+           software-properties-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && dpkg-reconfigure --frontend=noninteractive locales \
+    && update-locale LANG="en_US.UTF-8" \
     && chmod 777 /opt && chmod a+s /opt \
     && mkdir -p /docker \
     && if [ ! -f "$ND_ENTRYPOINT" ]; then \
@@ -34,6 +85,46 @@ RUN export ND_ENTRYPOINT="/docker/startup.sh" \
     && chmod -R 777 /docker && chmod a+s /docker
 
 ENTRYPOINT ["/docker/startup.sh"]
+
+
+#DSI STUDIO
+RUN add-apt-repository ppa:beineri/opt-qt-5.12.2-xenial \
+    && apt-get update \
+    && apt install -y --no-install-recommends \
+    freetds-common libclang1-5.0 libllvm5.0 libodbc1 libsdl2-2.0-0 libsndio6.1 \
+    libsybdb5 libxcb-xinerama0 qt5123d qt512base qt512canvas3d \
+    qt512connectivity qt512declarative qt512graphicaleffects \
+    qt512imageformats qt512location qt512multimedia qt512scxml qt512svg \
+    qt512wayland qt512x11extras qt512xmlpatterns qt512charts-no-lgpl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ENV QT_BASE_DIR="/opt/qt512"
+ENV QTDIR="$QT_BASE_DIR" \
+    PATH="$QT_BASE_DIR/bin:$PATH:/opt/dsi-studio/dsi_studio_64" \
+    LD_LIBRARY_PATH="$QT_BASE_DIR/lib/x86_64-linux-gnu:$QT_BASE_DIR/lib:$LD_LIBRARY_PATH" \
+    PKG_CONFIG_PATH="$QT_BASE_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
+RUN mkdir /opt/dsi-studio \
+  && cd /opt/dsi-studio \
+  && git clone https://github.com/frankyeh/DSI-Studio.git \
+  && mv DSI-Studio src \
+  && git clone https://github.com/frankyeh/TIPL.git \
+  && mv TIPL src/tipl \
+  && mkdir build && cd build \
+  && /opt/qt512/bin/qmake ../src && make \
+  && cd /opt/dsi-studio \
+  && curl -sSLO 'https://pitt.box.com/shared/static/n3ln8k7bakr7y5p0ekm3g4s0ucdmqkia.zip' \
+  && unzip n3ln8k7bakr7y5p0ekm3g4s0ucdmqkia.zip \
+  && rm n3ln8k7bakr7y5p0ekm3g4s0ucdmqkia.zip \
+  && cd dsi_studio_64 \
+  && rm *.dll \
+  && rm *.exe \
+  && rm -rf iconengines \
+  && rm -rf imageformats \
+  && rm -rf platforms \
+  && rm -rf styles \
+  && mv ../build/dsi_studio . \
+  && rm -rf /opt/dsi-studio/src /opt/dsi-studio/build
+
 
 ENV ANTSPATH="/opt/ants-2.3.1" \
     PATH="/opt/ants-2.3.1:$PATH"
@@ -62,6 +153,14 @@ RUN apt-get update -qq \
     && make install \
     && rm -rf /tmp/dcm2niix
 
+ENV DSISTUDIOPATH="/opt/dsistudio" \
+    PATH="/opt/dsistudio:$PATH"
+RUN echo "Downloading DSI studio ..." \
+    && mkdir -p /opt/dsistudio \
+    && wget -P /opt/dsistudio/ http://www.lin4neuro.net/lin4neuro/neuroimaging_software_packages/dsistudio1804.zip \
+    && unzip /opt/dsistudio/dsistudio1804.zip -d /opt/
+
+
 
 ENV C3DPATH="/opt/convert3d-1.0.0" \
     PATH="/opt/convert3d-1.0.0/bin:$PATH"
@@ -76,6 +175,9 @@ RUN echo "Downloading ITK-SNAP ..." \
     && mkdir -p /opt/itksnap \
     && wget -P /opt/itksnap/ https://sourceforge.net/projects/itk-snap/files/itk-snap/Nightly/itksnap-nightly-master-Linux-gcc64.tar.gz \
     && tar -xvzf /opt/itksnap/itksnap-nightly-master-Linux-gcc64.tar.gz -C /opt/itksnap --strip-components 1
+
+
+
 
 ENV FSLDIR="/opt/fsl-6.0.1" \
     PATH="/opt/fsl-6.0.1/bin:$PATH"
