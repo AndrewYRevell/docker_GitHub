@@ -131,6 +131,7 @@ RUN pip install setuptools
 RUN pip3 install bctpy
 RUN pip3 install spyder_kernels
 RUN pip3 install jupyter
+RUN pip3 install nipype
 WORKDIR /home/
 
 RUN git clone https://github.com/andyrevell/echobase.git
